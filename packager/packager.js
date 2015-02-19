@@ -29,6 +29,7 @@ var http = require('http');
 var launchEditor = require('./launchEditor.js');
 var parseCommandLine = require('./parseCommandLine.js');
 var webSocketProxy = require('./webSocketProxy.js');
+var projectRoots = [path.resolve(__dirname, '..')];
 
 var options = parseCommandLine([{
   command: 'port',
@@ -54,14 +55,12 @@ if (options.projectRoots) {
   }
 }
 
-if (options.root) {
-  if (typeof options.root === 'string') {
-    options.projectRoots.push(path.resolve(options.root));
-  } else {
-    options.root.forEach(function(root) {
-      options.projectRoots.push(path.resolve(root));
-    });
-  }
+if ('string' === typeof options.root) {
+  projectRoots.push(path.resolve(options.root));
+} else {
+  options.root.forEach(function(root) {
+    projectRoots.push(path.resolve(root));
+  });
 }
 
 if (options.assetRoots) {
@@ -148,7 +147,7 @@ function getDevToolsLauncher(options) {
 
 function getAppMiddleware(options) {
   return ReactPackager.middleware({
-    projectRoots: options.projectRoots,
+    projectRoots: projectRoots,
     blacklistRE: blacklist(false),
     cacheVersion: '2',
     transformModulePath: require.resolve('./transformer.js'),
@@ -166,7 +165,7 @@ function runServer(
     .use(getDevToolsLauncher(options))
     .use(getAppMiddleware(options));
 
-  options.projectRoots.forEach(function(root) {
+  projectRoots.forEach(function(root) {
     app.use(connect.static(root));
   });
 
